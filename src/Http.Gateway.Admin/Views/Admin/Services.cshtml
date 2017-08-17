@@ -1,0 +1,184 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Services Configuration</h2>
+<br />
+
+<div class="row" id="app">
+    <div class="col-lg-3">
+        <div class="input-group">
+            <input v-model="nameFilter" type="text" class="form-control" placeholder="Enter Filter...">
+            <div class="input-group-addon"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></div>
+        </div>
+        <br />
+        <ul class="list-unstyled">
+            <li v-for="service in services">
+                <a v-on:click="loadscript(service)">{{ service.id }}</a>
+            </li>
+        </ul>
+        <br />
+        <button v-on:click="addScript" class="btn btn-success" type="button"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+    </div>
+    <div class="col-lg-9">
+        <transition name="slide-fade">
+            <div v-if="selectedScript != null">
+                <div>
+                    <input type="text" v-model="selectedScript.id" />
+                    <input type="text" v-model="endpoint" placeholder="http://host:port" />
+                    <input v-on:click="beginFromEndpoint" v-bind:disabled="endpoint == ''" type="button" class="btn btn-info" value="From Endpoint" /> * This will overwrite current script
+                </div>
+                <br />
+                <div>
+                    <textarea v-model="selectedScript.content" style="resize:none; min-height:300px; width:600px"></textarea>
+                </div>
+                <br />
+                <div>
+                    <transition name="slide-fade">
+                        <ul v-if="compilationErrors.length > 0">
+                            <li v-for="error in compilationErrors">
+                                {{ error.level }} : line {{ error.location.Line}}, column {{ error.location.Column}}, message '{{ error.message}}'
+                            </li>
+                        </ul>
+                    </transition>
+                </div>
+                <br />
+                <div>
+                    <input v-on:click="save" type="button" class="btn btn-primary" value="Save" />
+                    <input v-on:click="load" type="button" class="btn btn-warning" value="Cancel" />
+                    <input v-on:click="deleteScript" type="button" class="btn btn-danger" value="Delete" />
+                </div>
+            </div>
+        </transition>
+    </div>
+</div>
+
+<script>
+    var gatewayBaseUrl = "http://localhost/gateway/"
+
+    var servicesResourceUrl = gatewayBaseUrl + "configuration-scripts/services";
+
+    window.onload = function () {
+        var app = new Vue({
+            el: '#app',
+            data: {
+                services: [],
+                selectedScript: null,
+                nameFilter: "",
+                compilationErrors: [],
+                endpoint: ''
+            },
+            watch: {
+                nameFilter: function () {
+                    app.refresh();
+                }
+            },
+            methods: {
+                refresh: _.debounce(function () {
+                    app.load();
+                }, 1000),
+                load: function () {
+
+                    app.$data.compilationErrors = [];
+
+                    var url = servicesResourceUrl;
+
+                    if (app.$data.nameFilter.trim() != "") {
+                        url = url + '?nameFilter=' + app.$data.nameFilter.trim();
+                    }
+
+                    $.ajax({
+                        type: 'GET',
+                        url: url,
+                        success: function (data) {
+                            app.$data.services = [];
+                            app.$data.services = data;
+                            app.selectedScript = null;
+                        }
+                    });
+                },
+                loadscript: function (data) {
+                    app.$data.selectedScript = data;
+                },
+                addScript: function () {
+                    app.$data.services.push({ content: '', id: 'newScript' });
+                },
+                save: function () {
+                    var url = servicesResourceUrl + '/' + app.$data.selectedScript.id;
+                    var payload = { script: app.$data.selectedScript.content };
+                    $.ajax({
+                        type: 'PUT',
+                        url: url,
+                        data: JSON.stringify(payload),
+                        dataType: 'json',
+                        contentType: 'application/json'
+                    })
+                    .complete(function (data) {
+                        app.$data.compilationErrors = [];
+                        if (data.status == 400) {
+                            app.$data.compilationErrors = data.responseJSON;
+                        }
+                        else if (data.status == 200) {
+                            app.$data.compilationErrors = [];
+                            alert('updated');
+                            app.load();
+                            app.selectedScript = null;
+                        }
+                    });
+                },
+                deleteScript: function () {
+                    var url = servicesResourceUrl + '/' + app.$data.selectedScript.id;
+
+                    $.ajax({
+                        type: 'DELETE',
+                        url: url,
+                    })
+                    .complete(function (data) {
+                        app.$data.compilationErrors = [];
+                        if (data.status == 400) {
+                            alert('Could not delete');
+                        }
+                        else if (data.status == 404) {
+                            alert('Not Found');
+                        }
+                        else if (data.status == 200) {
+                            app.$data.compilationErrors = [];
+                            alert('deleted');
+                            app.load();
+                            app.selectedScript = null;
+                        }
+                    });
+                },
+                beginFromEndpoint: function () {
+                    if (app.$data.endpoint != '') {
+                        $.ajax({
+                            type: 'GET',
+                            url: app.$data.endpoint + '/routes',
+                            success: function (data) {
+
+                                var script = 'backend "backend_name" from builtin { service_name = "serviceName", use_version = "1.0" | use_latest = "true"} \n';
+                                script += 'backend "backend_name" from static_list { instances = [ "http://instance1:port" ] } \n\n';
+
+                                script += 'match\n'
+
+                                for (var i = 0; i < data.length; i++) {
+                                    script += '    ' + data[i].httpMethod + ' "' + data[i].routeTemplate + '"\n';
+                                }
+
+                                script += 'modules';
+                                script += '    none\n';
+
+                                script += 'when\n';
+                                script += '    {} use "backend"';
+
+                                app.$data.selectedScript.content = script;
+                            }
+                        });
+                    }
+                }
+            }
+        });
+
+        app.load();
+    };
+</script>

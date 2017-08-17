@@ -1,0 +1,2 @@
+﻿module map_komodo_session is Http.Gateway.Modules.KomodoSessionToUserDataModule { token_url = "http://03rnb-fefmtds01/fefmiddletierdebug/api/sessiontokens/" }
+module map_komodo_session_debug is Http.Gateway.Modules.KomodoSessionToUserDataModule { token_url = "http://03rnb-fefmtds01/fefmiddletier/api/sessiontokens/" }

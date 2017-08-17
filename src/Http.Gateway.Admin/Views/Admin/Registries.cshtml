@@ -1,0 +1,81 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Registries Configuration</h2>
+
+<br />
+
+<div id="app" class="row">
+    <div class="col-lg-12">
+        <textarea v-model="script" class="form-control" style="resize:none; height:300px"></textarea>
+        <br />
+        <transition name="slide-fade">
+            <ul v-if="compilationErrors.length > 0">
+                <li v-for="error in compilationErrors">
+                    {{ error.level }} : line {{ error.location.Line}}, column {{ error.location.Column}}, message '{{ error.message}}'
+                </li>
+            </ul>
+        </transition>
+        <br />
+        <input v-on:click="save" type="button" class="btn btn-primary" value="Save" />
+        <input v-on:click="load" type="button" class="btn btn-danger" value="Cancel" />
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    var gatewayBaseUrl = "http://localhost/gateway/"
+
+    var registriesResourceUrl = gatewayBaseUrl + "configuration-scripts/registries";
+
+    window.onload = function () {
+        var app = new Vue({
+            el: '#app',
+            data: {
+                script: 'Loading...!',
+                compilationErrors: []
+            },
+            methods: {
+                save: function () {
+                    var payload = { script: app.$data.script };
+                    $.ajax({
+                        type: "POST",
+                        url: registriesResourceUrl,
+                        data: JSON.stringify(payload),
+                        dataType: "json",
+                        contentType: "application/json"
+                    })
+                    .complete(function (data) {
+                        app.$data.compilationErrors = [];
+                        if (data.status == 400) {
+                            app.$data.compilationErrors = data.responseJSON;
+                        }
+                        else if (data.status == 200) {
+                            app.$data.compilationErrors = [];
+                            alert("updated");
+                        }
+                    });
+                },
+                load: function () {
+                    app.$data.compilationErrors = [];
+                    $.ajax({
+                        type: "GET",
+                        url: registriesResourceUrl
+                    })
+                    .complete(function (data) {
+                        if (data.status == 404) {
+                            app.$data.script = "Registry configuration not found";
+                        }
+                        else if (data.status == 200) {
+                            app.$data.script = data.responseJSON.content;
+                        }
+                    });
+                }
+            }
+        });
+
+        app.load();
+    };
+
+</script>

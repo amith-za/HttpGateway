@@ -1,0 +1,1 @@
+﻿registry static_list is Http.Gateway.Registries.StaticRegistry { }
