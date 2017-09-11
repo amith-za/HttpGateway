@@ -60,15 +60,20 @@ namespace Http.Gateway
 
         private RequestPipleline GetPipeline(HttpRequestMessage request)
         {
+            RequestPipleline mostMatchedPipeline = null;
+            var score = 0;
             foreach (var pipeline in _serviceScripts.GetRequestPipelines())
             {
-                if (pipeline.CanHandle(request))
+                var pipelineScore = pipeline.CanHandle(request);
+
+                if (pipelineScore > score)
                 {
-                    return pipeline;
+                    mostMatchedPipeline = pipeline;
+                    score = pipelineScore;
                 }
             }
 
-            return null;
+            return mostMatchedPipeline;
         }
     }
 }

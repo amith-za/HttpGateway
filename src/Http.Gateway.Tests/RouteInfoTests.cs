@@ -29,7 +29,7 @@ namespace Http.Gateway.Tests
         {
             var routeInfo = new RouteInfo("GET", "{country}/accounts/{accountId}");
 
-            Assert.IsTrue(routeInfo.Match("GET", "zaf/accounts/12345"));
+            Assert.AreEqual(8, routeInfo.Match("GET", "zaf/accounts/12345"));
         }
 
         [TestMethod]
@@ -37,7 +37,7 @@ namespace Http.Gateway.Tests
         {
             var routeInfo = new RouteInfo("GET", "{country}/accounts/{accountId}");
 
-            Assert.IsFalse(routeInfo.Match("POST", "zaf/accounts/12345"));
+            Assert.AreEqual(0, routeInfo.Match("POST", "zaf/accounts/12345"));
         }
 
         [TestMethod]
@@ -45,7 +45,7 @@ namespace Http.Gateway.Tests
         {
             var routeInfo = new RouteInfo("GET", "{country}/accounts/{accountId}");
 
-            Assert.IsFalse(routeInfo.Match("GET", "zaf/account/12345"));
+            Assert.AreEqual(0, routeInfo.Match("GET", "zaf/account/12345"));
         }
 
         [TestMethod]
@@ -53,7 +53,7 @@ namespace Http.Gateway.Tests
         {
             var routeInfo = new RouteInfo("GET", "{country}/accounts/{accountId}");
 
-            Assert.IsTrue(routeInfo.Match("OPTIONS", "zaf/accounts/12345"));
+            Assert.AreEqual(8, routeInfo.Match("OPTIONS", "zaf/accounts/12345"));
         }
 
         [ExpectedException(typeof(ArgumentNullException))]

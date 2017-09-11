@@ -33,7 +33,7 @@ namespace Http.Gateway.Configuration
             _uriTemplate = new UriTemplate(routeTemplate, true);
         }
 
-        public bool Match(string httpMethod, string path)
+        public int Match(string httpMethod, string path)
         {
             if (
                 string.Equals(httpMethod, HttpMethod, StringComparison.InvariantCultureIgnoreCase) |
@@ -41,10 +41,12 @@ namespace Http.Gateway.Configuration
             {
                 var trimmedAddress = path.TrimStart('/');
 
-                return _uriTemplate.Match(new Uri(_baseAddress), new Uri($"{_baseAddress}{trimmedAddress}")) != null;
+                var match = _uriTemplate.Match(new Uri(_baseAddress), new Uri($"{_baseAddress}{trimmedAddress}"));
+
+                return match == null ? 0 : new Uri($"http://dummy/{match.Template.ToString()}").Segments.Length * match.BoundVariables.Count;
             }
 
-            return false;
+            return 0;
         }
     }
 }

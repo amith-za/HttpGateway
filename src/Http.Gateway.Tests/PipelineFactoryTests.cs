@@ -86,7 +86,7 @@ namespace Http.Gateway.Tests
             var httpConfig = new HttpConfiguration();
             request.Properties[System.Web.Http.Hosting.HttpPropertyKeys.HttpConfigurationKey] = httpConfig;
 
-            Assert.IsTrue(pipeline.CanHandle(request));
+            Assert.IsTrue(pipeline.CanHandle(request) > 0);
         }
 
         [TestMethod]
@@ -103,7 +103,7 @@ namespace Http.Gateway.Tests
             var httpConfig = new HttpConfiguration();
             request.Properties[System.Web.Http.Hosting.HttpPropertyKeys.HttpConfigurationKey] = httpConfig;
 
-            Assert.IsFalse(pipeline.CanHandle(request));
+            Assert.AreEqual(0, pipeline.CanHandle(request));
         }
     }
 }

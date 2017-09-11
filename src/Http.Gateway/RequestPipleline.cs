@@ -42,21 +42,21 @@ namespace Http.Gateway
             WireupPipeline();
         }
 
-        public bool CanHandle(HttpRequestMessage request)
+        public int CanHandle(HttpRequestMessage request)
         {
             var normalizedPath = request.NormalizedPath();
 
             var httpMethod = request.Method.Method;
 
+            var score = 0;
             foreach (var route in HandledRoutes)
             {
-                if (route.Match(httpMethod, normalizedPath))
-                {
-                    return true;
-                }
+                var routeScore = route.Match(httpMethod, normalizedPath);
+
+                score = Math.Max(routeScore, score);
             }
 
-            return false;
+            return score;
         }
     }
 }
