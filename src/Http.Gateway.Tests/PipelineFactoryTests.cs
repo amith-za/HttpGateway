@@ -16,7 +16,7 @@ namespace Http.Gateway.Tests
         {
             //var modules = new Configuration.Dsl.ModuleParser().ParseModules(Utility.ReadScript("modules.txt")).Result;
             var moduleCatalog = new Mock<IModuleCatalog>();
-            moduleCatalog.Setup(m => m.GetGlobalModules()).Returns(new System.Collections.Generic.List<Module>() { new KomodoSessionToUserDataModule(), new KomodoSessionToUserDataModule() });
+            moduleCatalog.Setup(m => m.GetGlobalModules()).Returns(new System.Collections.Generic.List<Module>() { });
 
             var registry = new Mock<IRegistry>();
 
@@ -43,11 +43,9 @@ namespace Http.Gateway.Tests
 
             Assert.IsNotNull(pipeline.PipelineModules);
 
-            Assert.AreEqual(3, pipeline.PipelineModules.Count);
-
-            Assert.IsInstanceOfType(pipeline.PipelineModules[0], typeof(KomodoSessionToUserDataModule));
-            Assert.IsInstanceOfType(pipeline.PipelineModules[1], typeof(KomodoSessionToUserDataModule));
-            Assert.IsInstanceOfType(pipeline.PipelineModules[2], typeof(RequestDispatchModule));
+            Assert.AreEqual(1, pipeline.PipelineModules.Count);
+            
+            Assert.IsInstanceOfType(pipeline.PipelineModules[0], typeof(RequestDispatchModule));
         }
 
         [TestMethod]
